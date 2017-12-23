@@ -1,0 +1,350 @@
+<html>
+<head>
+    <title>NinjaMan</title>
+    <style type="text/css">
+        * {         /* The * applies styles to all HTML elements, universal selector */
+            margin: 0;
+            padding: 0;
+        }
+        .row {
+            line-height: 0; /* Removes whitespace between horizontal lines */
+        }
+        .wall {
+            background-color: blue; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+        }
+        .sushi {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/sushi.png");
+            background-size: contain; /* Stretches image to fit height/width of element */
+        }
+        .onigiri {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/onigiri.png");
+            background-size: contain; /* Stretches image to fit height/width of element */
+        }
+        .blank {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+        }
+        #ninjaman {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/ninja.gif");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+        #scoreboard {
+            color: white;
+            background-color: black; 
+            height: 80px;
+            width: 280px;
+            display: inline-block; /* Determines how content is displayed */
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+        #blue {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/bluey.gif");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+        #pink {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/pinky.gif");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+         #pumpkin {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/pumpky.gif");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+         #red {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/red.gif");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+         #scared {
+            background-color: black; 
+            height: 40px;
+            width: 40px;
+            display: inline-block; /* Determines how content is displayed */
+            background-image: url("img/scaredy.png");
+            background-size: contain; /* Stretches image to fit height/width of element */
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="world"></div>
+    <div id="ghosts"></div>
+    <div id="ninjaman"></div>
+    <div id="scoreboard"></div>
+</body>
+<script type="text/javascript">
+    // Represents rows
+    var world = [  
+        [1,1,1,1,1,1,1],
+        [1,0,2,3,2,2,1],
+        [1,2,1,2,2,2,1],
+        [1,3,2,2,2,2,1],
+        [1,2,2,3,2,2,1],
+        [1,2,1,2,2,2,1],
+        [1,3,2,2,2,2,1],
+        [1,2,2,3,2,2,1],
+        [1,2,1,2,2,2,1],
+        [1,2,2,2,2,2,1],
+        [1,1,1,1,1,1,1]
+    ];
+
+    // Determines what each box in world is what type of food or wall 
+    var worldDict = {   
+        0: "blank",
+        1: "wall",
+        2: "sushi",
+        3: "onigiri"
+    }
+
+    // Keep score of eaten sushis
+    var score = 0;
+    var sushiScore = 10;
+    var onigiriScore = 5;
+
+    // Holds ninjaman's coordinates
+    var ninjaman = {    
+        x: 1,
+        y: 1,
+        lives: 3
+    }
+
+    // Holds the div IDs for each ghost that will be used in drawGhosts()
+    var ghosts = {
+        0: "blue",
+        1: "pink",
+        2: "pumpkin",
+        3: "red",
+        4: "scared"
+    }
+
+    // Holds x/y positions for each ghost, y position starts at 2 so their starting positions are never on ninjaman
+    var ghostArr = [
+        { // blue
+        "x" : randomIntFromInterval(1,5),
+        "y" : randomIntFromInterval(2,5)
+        },
+        { // pink
+        "x" : randomIntFromInterval(1,5),
+        "y" : randomIntFromInterval(2,5)
+        },
+        { // pumpkin
+        "x" : randomIntFromInterval(1,5),
+        "y" : randomIntFromInterval(2,2)
+        },
+        { // red
+        "x" : randomIntFromInterval(1,5),
+        "y" : randomIntFromInterval(2,5)
+        },
+        { // scared
+        "x" : randomIntFromInterval(1,5),
+        "y" : randomIntFromInterval(2,5)
+        },
+    ]
+
+    // Holds all possible directions the ghosts can move in
+    var direction = {
+        0 : 'left',
+        1 : 'right',
+        2 : 'up',
+        3 : 'down'
+    }
+
+    // How ninjaman moves
+    document.onkeydown = function(e) {
+        if (e.keyCode == 37) { // LEFT
+            // If where ninjaman wants to go on X axis left doesn't equal 1 (wall), he can move. Otherwise, he can't move
+            if(world[ninjaman.y][ninjaman.x - 1] != 1) { 
+                ninjaman.x--; 
+            }
+        }
+        else if (e.keyCode == 39) { // RIGHT
+            if(world[ninjaman.y][ninjaman.x + 1] != 1) {
+                ninjaman.x++;
+            }
+        }
+        else if (e.keyCode == 40) { // DOWN
+            if(world[ninjaman.y + 1][ninjaman.x] != 1) {
+                ninjaman.y++;
+            }
+        }
+        else if (e.keyCode == 38) { // UP
+            if(world[ninjaman.y - 1][ninjaman.x] != 1) {
+                ninjaman.y--;
+            }
+        }
+
+        // Changes tile to blank tile if it's sushi and increases score by 10
+        if (world[ninjaman.y][ninjaman.x] == 2) { 
+            world[ninjaman.y][ninjaman.x] = 0;
+            score += sushiScore;
+        } // Changes tile to blank tile if it's onigiri and increases score by 5
+        else if (world[ninjaman.y][ninjaman.x] == 3) { 
+            world[ninjaman.y][ninjaman.x] = 0;
+            score += onigiriScore;
+        } else {
+            for(var i = 0; i < ghostArr.length; i++) {
+                if (ninjaman.y == ghostArr[i].y && ninjaman.x == ghostArr[i].x) {
+                    collide();
+                }
+            }
+        }
+
+        // Updates the scorebox each time ninjaman moves to check if he gains points
+        drawScoreBox();
+        // Updates ghost position in a random direction each time ninjaman is moved
+        updateGhosts();
+        // Redraws world when ninjaman moves to update tiles (like if he eats a sushi)
+        drawWorld(); 
+        // Updates Ninjaman's position with each key press
+        drawNinjaman(); 
+    }
+
+    function collide () {
+        ninjaman.lives--;
+        console.log(ninjaman.lives);
+    }
+
+    // Randomizes the world map
+    function randomizeWorld(){
+        // Loops through each row in world array, starts after wall and finishes before the wall
+        for (var row = 1; row < world.length-1; row++) {
+            // Loops through each column in world array and randomizes which tile is placed
+            for (var column = 2; column < world[row].length-1; column++) {
+                world[row][column] = randomIntFromInterval(0,3);
+            }
+        }
+    }
+
+    // Allows random intervals that do not start with 1.
+    function randomIntFromInterval(min,max){
+        return Math.floor(Math.random()*(max-min+1)+min);
+    }
+
+    // Itterates through world array, each success creates a new div class "row" in the div id "world"
+    function drawWorld () {
+        output = "";
+
+        // World array contains 5 subarrays
+        for (var row = 0; row < world.length; row++) { 
+            output += "<div class = 'row'>";
+            // Iterates through row subarray in the world array, when done, moves on to next row in loop restart
+            for (var x = 0; x < world[row].length; x++) { 
+                // When creating the row, will use the class based on iteration of subarray, worldDict[world[0][1]] = "wall"
+                output += "<div class = '" + worldDict[world[row][x]] + "'></div>"; 
+            }
+            output += "</div>";
+        }
+        // InnherHTML allows JS to change content of HTML elements
+        document.getElementById("world").innerHTML = output; 
+    }
+
+    function drawGhosts () {
+        var content = "";
+
+        // Inserts each ghost in ghost array into the div as an ID
+        for (var i = 0; i < ghostArr.length; i++){
+            content += "<div id='" + ghosts[i] + "'></div>";
+        }
+        // Outputs the content in the ghost div, making the ghosts appear on the map
+        document.getElementById('ghosts').innerHTML = content;
+
+        for (var i = 0; i < ghostArr.length; i++) {
+            // Reaches into ghost object and uses it as ID to modify the div element
+            document.getElementById(ghosts[i]).style.top = ghostArr[i].y * 40 + "px"; 
+            document.getElementById(ghosts[i]).style.left = ghostArr[i].x * 40 + "px";   
+        }
+    }
+
+    // Called in ninjaman's movement, will update ghost's position each time he moves
+    function updateGhosts(){
+        // Grabs each ghost in the ghost array and plugs it into the moveGhosts()
+        for (var i = 0; i < ghostArr.length; i++){
+            moveGhosts(ghostArr[i]);
+        }
+        // Redraws the ghosts after their x/y positions are upated in moveGhosts()
+        drawGhosts();
+    }
+
+    // Moves the ghost on the map randomly
+    function moveGhosts (ghost) {
+        // Gets a random direction from all possible directions in direction object
+        var ghostDirection = direction[randomIntFromInterval(0,3)];
+
+        // If position is left, the ghost will move left on the map
+        if (ghostDirection == "left" && world[ghost.y][ghost.x - 1] != 1) {
+            ghost.x--;
+        } else if (ghostDirection == "right" && world[ghost.y][ghost.x + 1] != 1) {
+            ghost.x++;
+        } else if (ghostDirection == "up" && world[ghost.y - 1][ghost.x] != 1) {
+            ghost.y--;
+        } else if (ghostDirection == "down" && world[ghost.y + 1][ghost.x] != 1) {
+            ghost.y++;
+        }
+    }
+
+    function drawNinjaman() {
+        // Multiplies y coordinate by 40 to get the precise square (which are 40x40) on the map
+        document.getElementById("ninjaman").style.top = ninjaman.y * 40 + "px"; 
+        // Multiplies x coordinate by 40 to get the precise square (which are 40x40) on the map
+        document.getElementById("ninjaman").style.left = ninjaman.x * 40 + "px"; 
+    }
+
+    function drawScoreBox(){
+        content = "<div id='scoreBox'>";
+        content += "<p> Score: "+score+"</p>";
+        content += "<p> Lives: "+ninjaman.lives+"</p>";
+        content += "</div>";
+        document.getElementById("scoreboard").innerHTML = content;
+
+        if (ninjaman.lives == 0) {
+            content = "<div id='scoreBox'>";
+            content += "GAME OVER";
+            content += "</div>";
+            document.getElementById("scoreboard").innerHTML = content;
+        }
+    }
+   
+    randomizeWorld();
+    drawScoreBox();
+    drawWorld();
+    drawNinjaman(); // Initiates ninjaman's starting poisition
+    // Challenge 2: create ghosts that chase ninjaman
+    drawGhosts(); // Initiates ghost's starting positions
+</script>
+</html>
